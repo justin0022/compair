@@ -285,11 +285,16 @@ myApp.factory('RouteResolves',
     }
 }]);
 
+// Important: hashPrefix must be set before other config block or it will not work!
+myApp.config(['$locationProvider',function ($locationProvider) {
+    $locationProvider.hashPrefix('');
+}]);
+
 myApp.config(
-    ['$routeProvider', '$logProvider', '$httpProvider', '$locationProvider',
+    ['$routeProvider', '$logProvider', '$httpProvider',
      "RouteResolvesProvider", "ResolveDeferredRouteDataProvider",
      "localStorageServiceProvider", "chosenProvider",
-    function ($routeProvider, $logProvider, $httpProvider, $locationProvider,
+    function ($routeProvider, $logProvider, $httpProvider,
               RouteResolvesProvider, ResolveDeferredRouteDataProvider,
               localStorageServiceProvider, chosenProvider) {
 
@@ -314,10 +319,6 @@ myApp.config(
 
     var RouteResolves = RouteResolvesProvider.$get();
     var ResolveDeferredRouteData = ResolveDeferredRouteDataProvider.$get();
-
-    // doesn't work for now. URLs are encoded in address bar
-    // $locationProvider.html5Mode(true);
-    // $locationProvider.hashPrefix('!');
 
     $routeProvider
         .when ('/',
