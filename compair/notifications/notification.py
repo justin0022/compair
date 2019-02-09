@@ -81,3 +81,87 @@ class Notification(object):
             html_body=html_body,
             text_body=text_body
         )
+
+    @classmethod
+    def send_answer_period_ending_soon(cls, course, assignment, student):
+        # ensure recipient is student in class, has an email, and has email_notification_method enabled
+        recipient = User.query \
+            .join(UserCourse, UserCourse.user_id == User.id) \
+            .filter(
+                User.id == student.id,
+                User.email != None,
+                User.email != "",
+                User.email_notification_method == EmailNotificationMethod.enable,
+                UserCourse.course_id == course.id,
+                UserCourse.course_role == CourseRole.student
+            ) \
+            .first()
+
+        # check if recipient is valid
+        if not recipient:
+            return
+
+        # send the message
+        subject = "Answer period ending soon for an assignment in "+course.name
+        html_body = render_template(
+            'notification_answer_period_ending_soon.html',
+            user=recipient,
+            subject=subject,
+            course=course,
+            assignment=assignment,
+        )
+        text_body = render_template(
+            'notification_answer_period_ending_soon.txt',
+            user=recipient,
+            course=course,
+            assignment=assignment,
+        )
+
+        send_message.delay(
+            recipients=[recipient.email],
+            subject=subject,
+            html_body=html_body,
+            text_body=text_body
+        )
+
+    @classmethod
+    def send_comparison_period_ending_soon(cls, course, assignment, student):
+        # ensure recipient is student in class, has an email, and has email_notification_method enabled
+        recipient = User.query \
+            .join(UserCourse, UserCourse.user_id == User.id) \
+            .filter(
+                User.id == student.id,
+                User.email != None,
+                User.email != "",
+                User.email_notification_method == EmailNotificationMethod.enable,
+                UserCourse.course_id == course.id,
+                UserCourse.course_role == CourseRole.student
+            ) \
+            .first()
+
+        # check if recipient is valid
+        if not recipient:
+            return
+
+        # send the message
+        subject = "Comparison period ending soon for an assignment in "+course.name
+        html_body = render_template(
+            'notification_comparison_period_ending_soon.html',
+            user=recipient,
+            subject=subject,
+            course=course,
+            assignment=assignment,
+        )
+        text_body = render_template(
+            'notification_comparison_period_ending_soon.txt',
+            user=recipient,
+            course=course,
+            assignment=assignment,
+        )
+
+        send_message.delay(
+            recipients=[recipient.email],
+            subject=subject,
+            html_body=html_body,
+            text_body=text_body
+        )

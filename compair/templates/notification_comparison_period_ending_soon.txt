@@ -1,0 +1,4 @@
+{% block body %}
+The comparison period of the following assignment is ending soon: {{assignment.name}}
+
+{% endblock %}

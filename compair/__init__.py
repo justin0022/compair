@@ -22,7 +22,7 @@ from .api import register_api_blueprints, log_events, \
     register_demo_api_blueprints, log_demo_events, \
     register_statement_api_blueprints, impersonation as impersonation_api
 from compair.xapi import capture_xapi_events
-from compair.notifications import capture_notification_events
+from compair.notifications import capture_notification_events, capture_assignment_ending_soon_events
 
 class RegexConverter(BaseConverter):
     def __init__(self, url_map, *items):
@@ -124,17 +124,27 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
             # Skip if requests does not have InsecureRequestWarning
             pass
 
-    app.logger.debug("Application Configuration: " + str(app.config))
-
     # setup celery scheduled tasks
     if app.config.get('DEMO_INSTALLATION', False):
         from celery.schedules import crontab
 
-        app.config['CELERYBEAT_SCHEDULE'] = {}
+        if 'CELERYBEAT_SCHEDULE' not in app.config:
+            app.config['CELERYBEAT_SCHEDULE'] = {}
         app.config['CELERYBEAT_SCHEDULE']['reset-demo-data-daily'] = {
             'task': "compair.tasks.demo.reset_demo",
             'schedule': crontab(hour=3, minute=0)
         }
+    if app.config.get('NOTIFICATION_ASSIGNMENT_ENDING_ENABLED', False):
+        from celery.schedules import crontab
+
+        if 'CELERYBEAT_SCHEDULE' not in app.config:
+            app.config['CELERYBEAT_SCHEDULE'] = {}
+        app.config['CELERYBEAT_SCHEDULE']['check-assignment-ending-soon-hourly'] = {
+            'task': "compair.tasks.assignment_notification.check_assignment_period_ending",
+            'schedule': crontab(minute='*/2')   # TODO run every 2 minutes for dev. change before deploy
+        }
+
+    app.logger.debug("Application Configuration: " + str(app.config))
 
     db.init_app(app)
 
@@ -152,6 +162,10 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
         app.config.update(assets)
         prefix = get_asset_prefix(app)
         app.config.update(prefix)
+
+    if app.config.get('MAIL_NOTIFICATION_ENABLED', False) and \
+        app.config.get('NOTIFICATION_ASSIGNMENT_ENDING_ENABLED', False):
+        capture_assignment_ending_soon_events()
 
     if not skip_endpoints:
         # Flask-Login initialization

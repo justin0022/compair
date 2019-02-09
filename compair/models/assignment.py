@@ -220,6 +220,20 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         from . import AssignmentGrade
         AssignmentGrade.calculate_grades(self)
 
+    def answer_period_ending_soon(self, soon):
+        """ Whether the assignment is active and within answer period in which is going to end before given datetime
+        """
+        return self.active and self.answer_period and self.answer_end.replace(tzinfo=pytz.utc) < soon
+
+    def comparison_period_ending_soon(self, soon):
+        """ Whether the assignment is active and within comparison period in which is going to end before given datetime
+        """
+        if not self.compare_start:
+            # if there is no explicit comparison period defined, technically there is no end date to check (except course end date?)
+            return False
+        else:
+            return self.active and self.compare_period and self.compare_end.replace(tzinfo=pytz.utc) < soon
+
     @classmethod
     def validate_periods(cls, course_start, course_end, answer_start, answer_end, compare_start, compare_end, self_eval_start, self_eval_end):
         # validate answer period

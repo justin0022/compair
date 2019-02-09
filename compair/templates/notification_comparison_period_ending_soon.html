@@ -1,0 +1,11 @@
+{% block body %}
+<div class="standalone-assignment">
+    <!-- Assignment -->
+    <p class="intro-text">
+        The comparison period of the following assignment is ending soon: <strong>{{assignment.name}}</strong>
+        <br />
+    </p>
+</div>
+
+<div class="content">{{ clean_html(assignment.description) | safe }}</div>
+{% endblock %}
